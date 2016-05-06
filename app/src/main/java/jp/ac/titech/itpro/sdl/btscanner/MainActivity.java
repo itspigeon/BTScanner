@@ -3,12 +3,14 @@ package jp.ac.titech.itpro.sdl.btscanner;
 import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -21,6 +23,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -84,6 +87,46 @@ public class MainActivity extends AppCompatActivity {
         devListView = (ListView) findViewById(R.id.dev_list);
         assert devListView != null;
         devListView.setAdapter(devListAdapter);
+
+        devListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+                BluetoothDevice device = devList.get(pos);
+
+                String name = device.getName();
+                String address = device.getAddress();
+                int bondState = device.getBondState();
+                // int type = device.getType();
+                ParcelUuid[] uuids = device.getUuids();
+                // BluetoothClass deviceClass = device.getBluetoothClass();
+
+                String bondStateStr = "";
+                switch (bondState) {
+                    case BluetoothDevice.BOND_NONE:
+                        bondStateStr = getString(R.string.bond_none);
+                        break;
+                    case BluetoothDevice.BOND_BONDING:
+                        bondStateStr = getString(R.string.bond_bonding);
+                        break;
+                    case BluetoothDevice.BOND_BONDED:
+                        bondStateStr = getString(R.string.bond_bonded);
+                        break;
+                }
+
+                String uuidsStr = "(null)";
+                if (uuids != null) uuidsStr = uuids.toString();
+
+
+                String msg = getString(R.string.detail_dialog_message, name, address, bondStateStr, uuidsStr);
+
+                new AlertDialog.Builder(MainActivity.this)
+                               .setTitle(getString(R.string.detail_dialog_title, address))
+                               .setMessage(msg)
+                               .setPositiveButton(R.string.detail_dialog_ok, null)
+                               .show();
+
+            }
+        });
 
         btAdapter = BluetoothAdapter.getDefaultAdapter();
         if (btAdapter == null) {
